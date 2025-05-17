@@ -19,10 +19,10 @@ const streamURL = "wss://stream.binance.com:9443/ws/btcusdt@bookTicker/ethusdt@b
 
 type BookTicker struct {
 	Stream string `json:"stream"`
-	Data   struct {
-		Symbol string `json:"s"`
-		Bid    string `json:"b"`
-		Ask    string `json:"a"`
+	Data struct {
+		 Symbol string `json:"s"`
+		 Bid 	string `json:"b"`
+		 Ask 	string `json:"a"`
 	} `json:"data"`
 }
 
@@ -85,10 +85,11 @@ func listenWebSocket(ctx context.Context) {
 			}
 
 			var ticker BookTicker
-			if err := json.Unmarshal(message, &ticker); err != nil {
+			if err := json.Unmarshal(message, &ticker.Data); err != nil {
 				log.Println("JSON Unmarshal error:", err)
 				continue
 			}
+			log.Println("Ticker Contents:", ticker)
 
 			// Update price map
 			prices.Lock()
