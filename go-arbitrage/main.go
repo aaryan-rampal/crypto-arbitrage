@@ -34,6 +34,7 @@ var prices = struct {
 }
 
 func main() {
+	// context.withCancel makes sure all go-routines 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -95,8 +96,19 @@ func listenWebSocket(ctx context.Context) {
 			if prices.data[ticker.Data.Symbol] == nil {
 				prices.data[ticker.Data.Symbol] = make(map[string]float64)
 			}
-			prices.data[ticker.Data.Symbol]["ask"] = parseFloat(ticker.Data.Ask)
-			prices.data[ticker.Data.Symbol]["bid"] = parseFloat(ticker.Data.Bid)
+
+			// Check if Ask is non-empty and valid before updating
+			if ticker.Data.Ask != "" {
+				askPrice := parseFloat(ticker.Data.Ask)
+				prices.data[ticker.Data.Symbol]["ask"] = askPrice
+			}
+
+			// Check if Bid is non-empty and valid before updating
+			if ticker.Data.Bid != "" {
+				bidPrice := parseFloat(ticker.Data.Bid)
+				prices.data[ticker.Data.Symbol]["bid"] = bidPrice
+			}
+
 			prices.Unlock()
 
 			// Compute arbitrage
