@@ -11,6 +11,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -18,12 +19,12 @@ import (
 const streamURL = "wss://stream.binance.com:9443/ws/btcusdt@bookTicker/ethusdt@bookTicker/ethbtc@bookTicker"
 
 type BookTicker struct {
-	Stream string `json:"stream"`
-	Data   struct {
-		Symbol string `json:"s"`
-		Bid    string `json:"b"`
-		Ask    string `json:"a"`
-	} `json:"data"`
+	UpdateID int64  `json:"u"`
+	Symbol   string `json:"s"`
+	Bid      string `json:"b"`
+	BidSize  string `json:"B"`
+	Ask      string `json:"a"`
+	AskSize  string `json:"A"`
 }
 
 var prices = struct {
@@ -33,8 +34,19 @@ var prices = struct {
 	data: make(map[string]map[string]float64),
 }
 
+func findUsdtTriangles(symbols []string) []string {
+	var usdtPairs []string
+
+	for _, s := range symbols {
+		if strings.hasSuffix(s, "USDT") {
+			usdtPairs = append(usdtPairs, s)
+		}
+	}
+	
+}
+
 func main() {
-	// context.withCancel makes sure all go-routines 
+	// context.withCancel makes sure all go-routines
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -91,22 +103,24 @@ func listenWebSocket(ctx context.Context) {
 				continue
 			}
 
+			fmt.Printf("Symbol: %s | Bid: %s | Ask: %s\n", ticker.Symbol, ticker.Bid, ticker.Ask)
+
 			// Update price map
 			prices.Lock()
-			if prices.data[ticker.Data.Symbol] == nil {
-				prices.data[ticker.Data.Symbol] = make(map[string]float64)
+			if prices.data[ticker.Symbol] == nil {
+				prices.data[ticker.Symbol] = make(map[string]float64)
 			}
 
 			// Check if Ask is non-empty and valid before updating
-			if ticker.Data.Ask != "" {
-				askPrice := parseFloat(ticker.Data.Ask)
-				prices.data[ticker.Data.Symbol]["ask"] = askPrice
+			if ticker.Ask != "" {
+				askPrice := parseFloat(ticker.Ask)
+				prices.data[ticker.Symbol]["ask"] = askPrice
 			}
 
 			// Check if Bid is non-empty and valid before updating
-			if ticker.Data.Bid != "" {
-				bidPrice := parseFloat(ticker.Data.Bid)
-				prices.data[ticker.Data.Symbol]["bid"] = bidPrice
+			if ticker.Bid != "" {
+				bidPrice := parseFloat(ticker.Bid)
+				prices.data[ticker.Symbol]["bid"] = bidPrice
 			}
 
 			prices.Unlock()

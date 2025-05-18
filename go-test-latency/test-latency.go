@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -10,13 +13,13 @@ import (
 )
 
 const (
-	streamURL      = "wss://stream.binance.com:9443/ws/btcusdt@ticker"
-	numMessages    = 100 // Number of messages to send
-	sleepInterval  = 100 * time.Millisecond // 100ms between sends
+	streamURL     = "wss://stream.binance.com:9443/ws/btcusdt@ticker"
+	numMessages   = 100                     // Number of messages to send
+	sleepInterval = 1000 * time.Millisecond // 100ms between sends
 )
 
 var (
-	totalLatency int64
+	totalLatency  int64
 	totalMessages int64
 )
 
