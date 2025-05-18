@@ -34,16 +34,16 @@ var prices = struct {
 	data: make(map[string]map[string]float64),
 }
 
-func findUsdtTriangles(symbols []string) []string {
-	var usdtPairs []string
+// func findUsdtTriangles(symbols []string) []string {
+// 	var usdtPairs []string
 
-	for _, s := range symbols {
-		if strings.hasSuffix(s, "USDT") {
-			usdtPairs = append(usdtPairs, s)
-		}
-	}
-	
-}
+// 	for _, s := range symbols {
+// 		if strings.hasSuffix(s, "USDT") {
+// 			usdtPairs = append(usdtPairs, s)
+// 		}
+// 	}
+
+// }
 
 func main() {
 	// context.withCancel makes sure all go-routines
