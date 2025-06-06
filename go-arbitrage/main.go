@@ -11,7 +11,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"strings"
+	// "strings"
+	//"golang.org/x/net/trace"
+
 
 	"github.com/gorilla/websocket"
 )
@@ -34,16 +36,16 @@ var prices = struct {
 	data: make(map[string]map[string]float64),
 }
 
-func findUsdtTriangles(symbols []string) []string {
-	var usdtPairs []string
+// func findUsdtTriangles(symbols []string) []string {
+// 	var usdtPairs []string
 
-	for _, s := range symbols {
-		if strings.hasSuffix(s, "USDT") {
-			usdtPairs = append(usdtPairs, s)
-		}
-	}
-	
-}
+// 	for _, s := range symbols {
+// 		if strings.hasSuffix(s, "USDT") {
+// 			usdtPairs = append(usdtPairs, s)
+// 		}
+// 	}
+
+// }
 
 func main() {
 	// context.withCancel makes sure all go-routines
@@ -81,9 +83,13 @@ func listenWebSocket(ctx context.Context) {
 		}
 		log.Fatal("WebSocket connection error:", err)
 	}
+	// doesn't close connection until listenWebSocket returns
 	defer conn.Close()
 
 	fmt.Println("Connected to Binance WebSocket...")
+
+	// Tracing Latency
+	// tr := trace.New("Latency", conn)
 
 	for {
 		select {
@@ -143,12 +149,21 @@ func computeArbitrage() {
 	prices.RLock()
 	defer prices.RUnlock()
 
-	btcAsk := prices.data["BTCUSDT"]["ask"]
-	ethAsk := prices.data["ETHBTC"]["ask"]
-	ethBid := prices.data["ETHUSDT"]["bid"]
 
-	if btcAsk > 0 && ethAsk > 0 && ethBid > 0 {
-		ratio := (1 / btcAsk) * (1 / ethAsk) * ethBid
-		fmt.Printf("[%s] Arbitrage ratio: %.6f\n", time.Now().Format("15:04:05"), ratio)
+	// btc -> usdt -> eth -> btc
+	// usdteth -> ethbtc -> btc usdt
+	usdtethAsk := 1/prices.data["ETHUSDT"]["ask"]
+	ethbtcAsk := prices.data["ETHBTC"]["ask"]
+	btcusdtBid := prices.data["BTCUSDT"]["bid"]
+
+
+	if btcusdtBid > 0 && usdtethAsk > 0 && ethbtcAsk > 0 {
+		// ratio := (1 / ethbtcAsk) * (1 / usdtethAsk/) * ethBid
+		impliedRt := usdtethAsk * ethbtcAsk // usdtEth  usdt/btc
+		actualRt := 1/ btcusdtBid
+		if impliedRt > actualRt{
+			fmt.Printf("BTCUSDT %.4f, USDTETH %.4f, ETHBTC %.4f\n", btcusdtBid, usdtethAsk, ethbtcAsk)
+			fmt.Printf("[%s] Arbitrage ratio: %.6f\n", time.Now().Format("15:04:05.00000"), impliedRt/actualRt)
+		}
 	}
 }
